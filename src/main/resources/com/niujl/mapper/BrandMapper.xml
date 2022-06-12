@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace="com.niujl.mapper.UserMapper"：名称空间地址要与定义sql语句的接口UserMapper一致
+    id="selectAll"：相当于实现UserMapper接口的方法
+-->
+<mapper namespace="com.niujl.mapper.BrandMapper">
+    <resultMap id="brandResultMap" type="brand">
+        <result column="brand_name" property="brandName"/>
+        <result column="company_name" property="companyName"/>
+    </resultMap>
+<!--    查询所有-->
+    <select id="selectAll" resultMap="brandResultMap">
+        select *
+        from tb_brand;
+    </select>
+<!--    根据id查询所有信息-->
+    <select id="selectById" resultMap="brandResultMap">
+#         不用${id} 是因为防止sql注入（直接拼接显示）；#{id}这种方式拼接的是'?'，然后参数占位符'?' 替换 为值
+        select *
+        from tb_brand where id = #{id};
+    </select>
+    <!--    动态多条件条件查询-->
+    <select id="selectByCondition" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        where
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="companyName != null and companyName != ''">
+                and company_name like #{companyName}
+            </if>
+            <if test="brandName != null and brandName != ''">
+                and brand_name like #{brandName}
+            </if>
+    </select>
+<!--    单条件动态查询-->
+    <select id="selectByConditionSingle" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        <!--where、if 是mybatis提供的动态标签来拼接sql语句-->
+        <where>
+            <choose>
+                <when test="status != null">
+                    status = #{status}
+                </when>
+                <when test="companyName != null and companyName != '' ">
+                    company_name like #{companyName}
+                </when>
+                <when test="brandName != null and brandName != '' ">
+                    brand_name like #{brandName}
+                </when>
+            </choose>
+        </where>
+    </select>
+<!--    完整添加一条记录 设置useGeneratedKeys="true" keyProperty="id"，测试类才可以拿到返回值id-->
+    <insert id="add" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_brand (brand_name, company_name, ordered, description, status)
+        values (#{brandName},#{companyName},#{ordered},#{description},#{status});
+    </insert>
+<!--    更新一条记录-->
+    <update id="update">
+        update tb_brand
+        <set>
+            <if test="brandName != null and brandName != ''">
+                brand_name = #{brandName},
+            </if>
+            <if test="companyName != null and companyName != ''">
+                company_name = #{companyName},
+            </if>
+            <if test="ordered != null">
+                ordered = #{ordered},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="status != null">
+                status = #{status}
+            </if>
+        </set>
+        where id = #{id};
+    </update>
+<!--    根据id删除一条记录-->
+    <delete id="deleteById">
+        delete
+        from tb_brand
+        where id=#{id};
+    </delete>
+<!--    删除多个id对应的记录-->
+    <delete id="deleteByIds">
+        delete
+        from tb_brand
+        where id
+        in (
+            <foreach collection="ids" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+            );
+    </delete>
+
+</mapper>
